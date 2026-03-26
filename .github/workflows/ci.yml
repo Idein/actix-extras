@@ -42,7 +42,7 @@ jobs:
           - 7004:7004
           - 7005:7005
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install Redis CLI
         run: |
@@ -55,41 +55,32 @@ jobs:
           done
 
       - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
 
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
       - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
+        run:
+          cargo install cargo-hack
 
       - name: check minimal
-        uses: actions-rs/cargo@v1
-        with: { command: ci-min }
+        run:
+          cargo install cargo-hack
 
       - name: check minimal + tests
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        run:
+          cargo install ci-check-min-tests
 
       - name: check default
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check }
+        run:
+          cargo install ci-check
 
       - name: tests
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with: { command: ci-test }
+        run:
+          cargo install ci-test
 
       - name: Clear the cargo caches
         run: |
@@ -111,46 +102,43 @@ jobs:
     runs-on: ${{ matrix.target.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install ${{ matrix.version }}
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.version }}-${{ matrix.target.triple }}
-          profile: minimal
-          override: true
 
-      - name: Generate Cargo.lock
-        uses: actions-rs/cargo@v1
-        with:
-          command: generate-lockfile
       - name: Cache Dependencies
         uses: Swatinem/rust-cache@v1.2.0
 
       - name: Install cargo-hack
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-hack
+        run:
+          cargo install cargo-hack
 
       - name: check minimal
-        uses: actions-rs/cargo@v1
-        with: { command: ci-min }
+        run:
+          cargo install cargo-hack
 
       - name: check minimal + tests
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check-min-tests }
+        run:
+          cargo install ci-check-min-tests
 
       - name: check default
-        uses: actions-rs/cargo@v1
-        with: { command: ci-check }
+        run:
+          cargo install ci-check
+
+      - name: tests
+        run:
+          cargo install ci-test --exclude=actix-redis --exclude=actix-session -- --nocapture
+
 
       - name: tests
         uses: actions-rs/cargo@v1
         timeout-minutes: 40
         with:
           command: ci-test
-          args: --exclude=actix-redis --exclude=actix-session -- --nocapture
+          args:
 
       - name: Clear the cargo caches
         run: |
@@ -161,14 +149,12 @@ jobs:
     name: doc tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Install Rust (nightly)
-        uses: actions-rs/toolchain@v1
+      - name: Install stable
+        uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly-x86_64-unknown-linux-gnu
-          profile: minimal
-          override: true
+          toolchain: stable
 
       - name: Generate Cargo.lock
         uses: actions-rs/cargo@v1
@@ -177,8 +163,5 @@ jobs:
         uses: Swatinem/rust-cache@v1.3.0
 
       - name: doc tests
-        uses: actions-rs/cargo@v1
-        timeout-minutes: 40
-        with:
-          command: ci-doctest
-          args: -- --nocapture
+        run: |
+          cargo ci-doctest -- --nocapture
